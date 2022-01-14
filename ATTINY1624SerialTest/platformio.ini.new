@@ -1,0 +1,50 @@
+; PlatformIO Project Configuration File
+;
+;   Build options: build flags, source filter
+;   Upload options: custom upload port, speed and extra flags
+;   Library options: dependencies, extra library storages
+;   Advanced options: extra scripting
+;
+; Please visit documentation for the other options and examples
+; https://docs.platformio.org/page/projectconf.html
+
+[env:ATtiny1624]
+platform = atmelmegaavr
+board = attiny1624
+framework = arduino
+; use updated toolchain and core
+; link to toolchain is OS specific. default Windows.
+; see https://github.com/maxgerhardt/pio-newer-atmel-toolchains.
+; for Linux, use https://github.com/maxgerhardt/pio-newer-atmel-toolchains/raw/main/toolchain-atmelavr-linux_x86_64-1.70300.200526.tar.gz
+platform_packages = 
+   toolchain-atmelavr@https://github.com/maxgerhardt/pio-newer-atmel-toolchains/raw/main/toolchain-atmelavr-windows-1.70300.200526.tar.gz
+   framework-arduino-megaavr-megatinycore@https://github.com/maxgerhardt/megaTinyCore.git
+
+; set clock to 20Mhz
+board_build.f_cpu = 16000000L
+; remove old GNU+11 standard
+build_unflags = -std=gnu++11
+; set GNU++17 standard and add in configuration macros
+build_flags = 
+   -std=gnu++17
+   -flto
+   -mrelax 
+   -DCLOCK_SOURCE=0
+   -DTWI_MORS
+   -DCORE_ATTACH_ALL
+   -DMEGATINYCORE_MAJOR=2UL
+   -DMEGATINYCORE_MINOR=5UL
+   -DMEGATINYCORE_PATCH=6UL
+   -DMEGATINYCORE_RELEASED=1
+monitor_speed = 115200
+monitor_port = COM4
+upload_speed = 115200
+upload_port = COM5
+
+upload_command =
+	- pymcuprog erase -t uart -u $UPLOAD_PORT -c $UPLOAD_SPEED -d attiny1624
+	- pymcuprog write -t uart -u $UPLOAD_PORT -c $UPLOAD_SPEED -d attiny1624 -m fuses -o 1 -l 0xC4	; BOD 4V & Enabled 
+	- pymcuprog write -t uart -u $UPLOAD_PORT -c $UPLOAD_SPEED -d attiny1624 -m fuses -o 2 -l 1		; l = 1 - 16MHz , l = 2 - 20Mhz
+	- pymcuprog write -t uart -u $UPLOAD_PORT -c $UPLOAD_SPEED -d attiny1624 -f .pio\build\ATtiny1624\firmware.hex --verify
+
+
